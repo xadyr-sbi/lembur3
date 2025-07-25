@@ -17,7 +17,54 @@ interface OvertimeData {
   [key: string]: OvertimeDay
 }
 
+// National holidays based on SKB 3 Menteri 2024-2025
+const nationalHolidays: Record<string, string[]> = {
+  '2024': [
+    '2024-01-01', // Tahun Baru Masehi
+    '2024-02-08', // Isra Mikraj Nabi Muhammad SAW
+    '2024-02-10', // Tahun Baru Imlek 2575
+    '2024-03-11', // Hari Suci Nyepi
+    '2024-03-29', // Wafat Isa Almasih
+    '2024-03-31', // Hari Paskah
+    '2024-04-10', // Hari Raya Idul Fitri 1445 H
+    '2024-04-11', // Hari Raya Idul Fitri 1445 H
+    '2024-05-01', // Hari Buruh Internasional
+    '2024-05-09', // Kenaikan Isa Almasih
+    '2024-05-23', // Hari Raya Waisak 2568 BE
+    '2024-06-01', // Hari Lahir Pancasila
+    '2024-06-17', // Hari Raya Idul Adha 1445 H
+    '2024-07-07', // Tahun Baru Islam 1446 H
+    '2024-08-17', // Hari Kemerdekaan RI
+    '2024-09-16', // Maulid Nabi Muhammad SAW
+    '2024-12-25', // Hari Raya Natal
+    '2024-12-24', // Cuti Bersama Natal
+    '2024-12-26', // Cuti Bersama Natal
+  ],
+  '2025': [
+    '2025-01-01', // Tahun Baru Masehi
+    '2025-01-28', // Isra Mikraj Nabi Muhammad SAW
+    '2025-01-29', // Tahun Baru Imlek 2576
+    '2025-03-29', // Hari Suci Nyepi
+    '2025-04-18', // Wafat Isa Almasih
+    '2025-04-20', // Hari Paskah
+    '2025-04-21', // Hari Raya Idul Fitri 1446 H
+    '2025-04-22', // Hari Raya Idul Fitri 1446 H
+    '2025-05-01', // Hari Buruh Internasional
+    '2025-05-29', // Kenaikan Isa Almasih
+    '2025-06-07', // Hari Raya Waisak 2569 BE
+    '2025-06-01', // Hari Lahir Pancasila
+    '2025-06-07', // Hari Raya Idul Adha 1446 H
+    '2025-06-27', // Tahun Baru Islam 1447 H
+    '2025-08-17', // Hari Kemerdekaan RI
+    '2025-09-05', // Maulid Nabi Muhammad SAW
+    '2025-12-25', // Hari Raya Natal
+    '2025-12-24', // Cuti Bersama Natal
+    '2025-12-26', // Cuti Bersama Natal
+  ]
+};
+
 export default function OvertimeCalendar() {
+  // Set to current date when app opens
   const [currentDate, setCurrentDate] = useState(new Date())
   const [basicSalary, setBasicSalary] = useState<number>(2436886)
   const [workExperience, setWorkExperience] = useState<number>(0)
@@ -262,24 +309,36 @@ export default function OvertimeCalendar() {
     for (let date = 1; date <= daysInMonth; date++) {
       const key = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${date}`
       const overtimeDay = overtimeData[key]
-      const isWeekend = (firstDay + date - 1) % 7 === 0 || (firstDay + date - 1) % 7 === 6
+      
+      // Check if it's a national holiday
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
+      const isNationalHoliday = nationalHolidays[year]?.includes(dateStr) ?? false;
+      
+      const dayIndex = (firstDay + date - 1) % 7
+      const isSunday = dayIndex === 0
       
       days.push(
         <div
           key={date}
           onClick={() => handleDateClick(date)}
           className={`h-16 border border-gray-300 cursor-pointer flex items-center justify-center text-sm font-medium relative
-            ${overtimeDay ? (overtimeDay.isHoliday ? 'bg-red-500 text-white' : 'bg-yellow-400 text-black') : 'bg-green-200'}
-            ${isWeekend ? 'text-red-600' : 'text-black'}
+            ${overtimeDay ? (overtimeDay.isHoliday ? 'bg-red-500 text-white' : 'bg-yellow-400 text-black') : (isNationalHoliday ? 'bg-pink-300' : 'bg-green-200')}
             ${selectedDate === date ? 'ring-2 ring-blue-500' : ''}
             hover:bg-opacity-80 transition-colors
           `}
         >
-          <span className={isWeekend ? 'text-red-600 font-bold' : ''}>{date}</span>
+          <span className={isSunday ? 'text-red-600 font-bold' : 'text-black'}>
+            {date}
+          </span>
           {overtimeDay && (
             <div className="absolute bottom-1 right-1 text-xs">
               {overtimeDay.hours}h
             </div>
+          )}
+          {isNationalHoliday && !overtimeDay && (
+            <div className="absolute bottom-1 right-1 text-xs">Libur</div>
           )}
         </div>
       )
@@ -362,7 +421,7 @@ export default function OvertimeCalendar() {
                 <div
                   key={day}
                   className={`p-3 text-center font-bold border border-gray-300 ${
-                    index === 0 || index === 6 ? 'text-red-600' : 'text-black'
+                    index === 0 ? 'text-red-600' : 'text-black'
                   }`}
                 >
                   {day}
@@ -470,6 +529,10 @@ export default function OvertimeCalendar() {
                   <div className="w-4 h-4 bg-red-500 border"></div>
                   <span className="text-sm">Hari Libur Lembur</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-pink-300 border"></div>
+                  <span className="text-sm">Libur Nasional</span>
+                </div>
               </div>
 
               <div className="mt-6 text-xs text-gray-600">
@@ -477,7 +540,8 @@ export default function OvertimeCalendar() {
                 <ul className="space-y-1">
                   <li>• Hari kerja: Jam 1 = 1.5x, Jam 2+ = 2x</li>
                   <li>• Hari libur: Jam 1-7 = 2x, Jam 8 = 3x, Jam 9-10 = 4x</li>
-                  <li>• Upah per jam = Gaji Pokok ÷ 173</li>
+                  <li>• Upah per jam = (UMK + Tunjangan) ÷ 173</li>
+                  <li>• Tunjangan masa kerja: Rp5.000/tahun pertama + Rp10.000/tahun berikutnya</li>
                 </ul>
               </div>
               
