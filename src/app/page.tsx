@@ -17,7 +17,7 @@ interface OvertimeData {
   [key: string]: OvertimeDay
 }
 
-// National holidays based on SKB 3 Menteri 2024-2025
+// National holidays only (without joint leave)
 const nationalHolidays: Record<string, string[]> = {
   '2024': [
     '2024-01-01', // Tahun Baru Masehi
@@ -37,8 +37,6 @@ const nationalHolidays: Record<string, string[]> = {
     '2024-08-17', // Hari Kemerdekaan RI
     '2024-09-16', // Maulid Nabi Muhammad SAW
     '2024-12-25', // Hari Raya Natal
-    '2024-12-24', // Cuti Bersama Natal
-    '2024-12-26', // Cuti Bersama Natal
   ],
   '2025': [
     '2025-01-01', // Tahun Baru Masehi
@@ -58,13 +56,10 @@ const nationalHolidays: Record<string, string[]> = {
     '2025-08-17', // Hari Kemerdekaan RI
     '2025-09-05', // Maulid Nabi Muhammad SAW
     '2025-12-25', // Hari Raya Natal
-    '2025-12-24', // Cuti Bersama Natal
-    '2025-12-26', // Cuti Bersama Natal
   ]
 };
 
 export default function OvertimeCalendar() {
-  // Set to current date when app opens
   const [currentDate, setCurrentDate] = useState(new Date())
   const [basicSalary, setBasicSalary] = useState<number>(2436886)
   const [workExperience, setWorkExperience] = useState<number>(0)
@@ -72,6 +67,7 @@ export default function OvertimeCalendar() {
   const [selectedDate, setSelectedDate] = useState<number | null>(null)
   const [overtimeHours, setOvertimeHours] = useState<string>('')
   const [isHoliday, setIsHoliday] = useState<boolean>(false)
+  const [today, setToday] = useState<Date>(new Date()) // Tanggal saat aplikasi dibuka
 
   // Load data from localStorage when component mounts
   useEffect(() => {
@@ -251,48 +247,6 @@ export default function OvertimeCalendar() {
     }
   }
 
-  const exportData = () => {
-    const dataToExport = {
-      overtimeData,
-      basicSalary,
-      workExperience,
-      exportDate: new Date().toISOString()
-    }
-    const dataStr = JSON.stringify(dataToExport, null, 2)
-    const dataBlob = new Blob([dataStr], { type: 'application/json' })
-    const url = URL.createObjectURL(dataBlob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `data-lembur-${new Date().toISOString().split('T')[0]}.json`
-    link.click()
-    URL.revokeObjectURL(url)
-  }
-
-  const importData = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        try {
-          const importedData = JSON.parse(e.target?.result as string)
-          if (importedData.overtimeData && importedData.basicSalary !== undefined && importedData.workExperience !== undefined) {
-            setOvertimeData(importedData.overtimeData)
-            setBasicSalary(importedData.basicSalary)
-            setWorkExperience(importedData.workExperience)
-            alert('Data berhasil diimpor!')
-          } else {
-            alert('Format file tidak valid!')
-          }
-        } catch {
-          alert('Error membaca file!')
-        }
-      }
-      reader.readAsText(file)
-    }
-    // Reset input value
-    event.target.value = ''
-  }
-
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentDate)
     const firstDay = getFirstDayOfMonth(currentDate)
@@ -319,6 +273,12 @@ export default function OvertimeCalendar() {
       const dayIndex = (firstDay + date - 1) % 7
       const isSunday = dayIndex === 0
       
+      // Check if this is today's date
+      const isToday = 
+        date === today.getDate() &&
+        month === today.getMonth() &&
+        year === today.getFullYear();
+      
       days.push(
         <div
           key={date}
@@ -326,12 +286,16 @@ export default function OvertimeCalendar() {
           className={`h-16 border border-gray-300 cursor-pointer flex items-center justify-center text-sm font-medium relative
             ${overtimeDay ? (overtimeDay.isHoliday ? 'bg-red-500 text-white' : 'bg-yellow-400 text-black') : (isNationalHoliday ? 'bg-pink-300' : 'bg-green-200')}
             ${selectedDate === date ? 'ring-2 ring-blue-500' : ''}
+            ${isToday ? 'ring-2 ring-purple-500 ring-offset-1' : ''}
             hover:bg-opacity-80 transition-colors
           `}
         >
           <span className={isSunday ? 'text-red-600 font-bold' : 'text-black'}>
             {date}
           </span>
+          {isToday && (
+            <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-purple-500"></div>
+          )}
           {overtimeDay && (
             <div className="absolute bottom-1 right-1 text-xs">
               {overtimeDay.hours}h
@@ -533,6 +497,12 @@ export default function OvertimeCalendar() {
                   <div className="w-4 h-4 bg-pink-300 border"></div>
                   <span className="text-sm">Libur Nasional</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border border-purple-500 relative">
+                    <div className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                  </div>
+                  <span className="text-sm">Hari Ini</span>
+                </div>
               </div>
 
               <div className="mt-6 text-xs text-gray-600">
@@ -546,20 +516,6 @@ export default function OvertimeCalendar() {
               </div>
               
               <div className="mt-4 space-y-2">
-                <Button onClick={exportData} variant="outline" size="sm" className="w-full">
-                  Export Data
-                </Button>
-                <label className="w-full">
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={importData}
-                    className="hidden"
-                  />
-                  <Button variant="outline" size="sm" className="w-full">
-                    Import Data
-                  </Button>
-                </label>
                 <Button onClick={clearAllData} variant="outline" size="sm" className="w-full text-red-600">
                   Hapus Semua Data
                 </Button>
