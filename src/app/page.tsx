@@ -60,14 +60,28 @@ const nationalHolidays: Record<string, string[]> = {
 };
 
 export default function OvertimeCalendar() {
-  const [currentDate, setCurrentDate] = useState(new Date())
+  const [today, setToday] = useState(new Date()) // Tanggal saat ini (selalu diperbarui)
+  const [currentDate, setCurrentDate] = useState(new Date(today)) // Bulan yang ditampilkan di kalender
   const [basicSalary, setBasicSalary] = useState<number>(2436886)
   const [workExperience, setWorkExperience] = useState<number>(0)
   const [overtimeData, setOvertimeData] = useState<OvertimeData>({})
   const [selectedDate, setSelectedDate] = useState<number | null>(null)
   const [overtimeHours, setOvertimeHours] = useState<string>('')
   const [isHoliday, setIsHoliday] = useState<boolean>(false)
-  const [today, setToday] = useState<Date>(new Date()) // Tanggal saat aplikasi dibuka
+
+  // Update today setiap menit
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setToday(new Date())
+    }, 60000) // Update setiap 1 menit
+    
+    return () => clearInterval(timer)
+  }, [])
+
+  // Set currentDate ke today saat pertama kali dibuka
+  useEffect(() => {
+    setCurrentDate(new Date(today))
+  }, [today])
 
   // Load data from localStorage when component mounts
   useEffect(() => {
@@ -327,7 +341,7 @@ export default function OvertimeCalendar() {
             <div className="flex items-center justify-between mt-4">
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
-                  <Label htmlFor="salary" className="font-medium">UMK MADIUN:</Label>
+                  <Label htmlFor="salary" className="font-medium">UMSK GWI MADIUN:</Label>
                   <div className="flex items-center gap-2">
                     <span>Rp</span>
                     <Input
