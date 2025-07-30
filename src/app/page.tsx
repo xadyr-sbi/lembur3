@@ -69,22 +69,26 @@ export default function OvertimeCalendar() {
   const [overtimeHours, setOvertimeHours] = useState<string>('')
   const [isHoliday, setIsHoliday] = useState<boolean>(false)
 
+  // Update today setiap menit
   useEffect(() => {
     const timer = setInterval(() => {
       setToday(new Date())
-    }, 60000)
+    }, 60000) // Update setiap 1 menit
+    
     return () => clearInterval(timer)
   }, [])
 
+  // Set currentDate ke today saat pertama kali dibuka
   useEffect(() => {
     setCurrentDate(new Date(today))
   }, [today])
 
+  // Load data from localStorage when component mounts
   useEffect(() => {
     const savedOvertimeData = localStorage.getItem('overtimeData')
     const savedBasicSalary = localStorage.getItem('basicSalary')
     const savedWorkExperience = localStorage.getItem('workExperience')
-
+    
     if (savedOvertimeData) {
       try {
         setOvertimeData(JSON.parse(savedOvertimeData))
@@ -92,18 +96,27 @@ export default function OvertimeCalendar() {
         console.error('Error loading overtime data:', error)
       }
     }
-    if (savedBasicSalary) setBasicSalary(Number(savedBasicSalary))
-    if (savedWorkExperience) setWorkExperience(Number(savedWorkExperience))
+    
+    if (savedBasicSalary) {
+      setBasicSalary(Number(savedBasicSalary))
+    }
+    
+    if (savedWorkExperience) {
+      setWorkExperience(Number(savedWorkExperience))
+    }
   }, [])
 
+  // Save overtime data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('overtimeData', JSON.stringify(overtimeData))
   }, [overtimeData])
 
+  // Save basic salary to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('basicSalary', basicSalary.toString())
   }, [basicSalary])
 
+  // Save work experience to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('workExperience', workExperience.toString())
   }, [workExperience])
@@ -115,8 +128,13 @@ export default function OvertimeCalendar() {
 
   const dayNames = ['Mgg', 'Snin', 'Slsa', 'Rbu', 'Kmis', 'Jmat', 'Sbtu']
 
-  const getDaysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
-  const getFirstDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
+  }
 
   const calculateWorkExperienceAllowance = (years: number): number => {
     if (years <= 0) return 0
@@ -126,15 +144,24 @@ export default function OvertimeCalendar() {
   const calculateOvertimePay = (hours: number, isHoliday: boolean, basicSalary: number, workExp: number) => {
     const workExperienceAllowance = calculateWorkExperienceAllowance(workExp)
     const totalBasicSalary = basicSalary + workExperienceAllowance
-    const hourlyRate = totalBasicSalary / 173
-
+    const hourlyRate = totalBasicSalary / 173 // 173 jam kerja per bulan standar Indonesia
+    
     if (isHoliday) {
-      if (hours <= 7) return hours * hourlyRate * 2
-      else if (hours === 8) return (7 * hourlyRate * 2) + (1 * hourlyRate * 3)
-      else return (7 * hourlyRate * 2) + (1 * hourlyRate * 3) + ((hours - 8) * hourlyRate * 4)
+      // Hari libur/minggu
+      if (hours <= 7) {
+        return hours * hourlyRate * 2 // 2x untuk 7 jam pertama
+      } else if (hours === 8) {
+        return (7 * hourlyRate * 2) + (1 * hourlyRate * 3) // jam ke-8: 3x
+      } else {
+        return (7 * hourlyRate * 2) + (1 * hourlyRate * 3) + ((hours - 8) * hourlyRate * 4) // jam ke-9,10: 4x
+      }
     } else {
-      if (hours <= 1) return hours * hourlyRate * 1.5
-      else return (1 * hourlyRate * 1.5) + ((hours - 1) * hourlyRate * 2)
+      // Hari kerja biasa
+      if (hours <= 1) {
+        return hours * hourlyRate * 1.5 // 1.5x untuk jam pertama
+      } else {
+        return (1 * hourlyRate * 1.5) + ((hours - 1) * hourlyRate * 2) // jam selanjutnya: 2x
+      }
     }
   }
 
@@ -142,7 +169,8 @@ export default function OvertimeCalendar() {
     let total = 0
     const currentYear = currentDate.getFullYear()
     const currentMonth = currentDate.getMonth()
-
+    
+    // Hitung hanya untuk bulan yang sedang ditampilkan (dari tanggal 1 sampai akhir bulan)
     Object.entries(overtimeData).forEach(([key, day]) => {
       const [year, month] = key.split('-').map(Number)
       if (year === currentYear && month === currentMonth) {
@@ -155,9 +183,13 @@ export default function OvertimeCalendar() {
   const getTotalOvertimeHours = () => {
     const currentYear = currentDate.getFullYear()
     const currentMonth = currentDate.getMonth()
+    
+    // Hitung hanya untuk bulan yang sedang ditampilkan (dari tanggal 1 sampai akhir bulan)
     return Object.entries(overtimeData).reduce((total, [key, day]) => {
       const [year, month] = key.split('-').map(Number)
-      if (year === currentYear && month === currentMonth) total += day.hours
+      if (year === currentYear && month === currentMonth) {
+        return total + day.hours
+      }
       return total
     }, 0)
   }
@@ -179,11 +211,15 @@ export default function OvertimeCalendar() {
     if (selectedDate && overtimeHours) {
       const key = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${selectedDate}`
       const hours = parseFloat(overtimeHours)
-
+      
       if (hours > 0) {
         setOvertimeData(prev => ({
           ...prev,
-          [key]: { date: selectedDate, hours, isHoliday }
+          [key]: {
+            date: selectedDate,
+            hours: hours,
+            isHoliday: isHoliday
+          }
         }))
       } else {
         setOvertimeData(prev => {
@@ -192,7 +228,7 @@ export default function OvertimeCalendar() {
           return newData
         })
       }
-
+      
       setSelectedDate(null)
       setOvertimeHours('')
       setIsHoliday(false)
@@ -202,8 +238,11 @@ export default function OvertimeCalendar() {
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
       const newDate = new Date(prev)
-      if (direction === 'prev') newDate.setMonth(prev.getMonth() - 1)
-      else newDate.setMonth(prev.getMonth() + 1)
+      if (direction === 'prev') {
+        newDate.setMonth(prev.getMonth() - 1)
+      } else {
+        newDate.setMonth(prev.getMonth() + 1)
+      }
       return newDate
     })
   }
@@ -227,27 +266,33 @@ export default function OvertimeCalendar() {
     const firstDay = getFirstDayOfMonth(currentDate)
     const days = []
 
+    // Empty cells for days before the first day of the month
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-16 border border-gray-300"></div>)
+      days.push(
+        <div key={`empty-${i}`} className="h-16 border border-gray-300"></div>
+      )
     }
 
+    // Days of the month
     for (let date = 1; date <= daysInMonth; date++) {
       const key = `${currentDate.getFullYear()}-${currentDate.getMonth()}-${date}`
       const overtimeDay = overtimeData[key]
-
+      
+      // Check if it's a national holiday
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
       const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
       const isNationalHoliday = nationalHolidays[year]?.includes(dateStr) ?? false;
-
+      
       const dayIndex = (firstDay + date - 1) % 7
       const isSunday = dayIndex === 0
-
-      const isToday =
+      
+      // Check if this is today's date
+      const isToday = 
         date === today.getDate() &&
         month === today.getMonth() &&
         year === today.getFullYear();
-
+      
       days.push(
         <div
           key={date}
@@ -256,7 +301,8 @@ export default function OvertimeCalendar() {
             ${overtimeDay ? (overtimeDay.isHoliday ? 'bg-red-500 text-white' : 'bg-yellow-400 text-black') : (isNationalHoliday ? 'bg-pink-300' : 'bg-green-200')}
             ${selectedDate === date ? 'ring-2 ring-blue-500' : ''}
             ${isToday ? 'ring-2 ring-purple-500 ring-offset-1' : ''}
-            hover:bg-opacity-80 transition-colors`}
+            hover:bg-opacity-80 transition-colors
+          `}
         >
           <span className={isSunday ? 'text-red-600 font-bold' : 'text-black'}>
             {date}
@@ -293,7 +339,7 @@ export default function OvertimeCalendar() {
               </p>
             </div>
             <div className="flex items-center justify-between mt-4">
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
                   <Label htmlFor="salary" className="font-medium">UMSK GWI MADIUN:</Label>
                   <div className="flex items-center gap-2">
@@ -347,17 +393,21 @@ export default function OvertimeCalendar() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
+            {/* Calendar Header */}
             <div className="grid grid-cols-7 bg-yellow-100">
               {dayNames.map((day, index) => (
                 <div
                   key={day}
-                  className={`p-3 text-center font-bold border border-gray-300 ${index === 0 ? 'text-red-600' : 'text-black'}`}
+                  className={`p-3 text-center font-bold border border-gray-300 ${
+                    index === 0 ? 'text-red-600' : 'text-black'
+                  }`}
                 >
                   {day}
                 </div>
               ))}
             </div>
-
+            
+            {/* Calendar Grid */}
             <div className="grid grid-cols-7">
               {renderCalendarDays()}
             </div>
@@ -365,6 +415,7 @@ export default function OvertimeCalendar() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Input Form */}
           <Card>
             <CardHeader>
               <CardTitle>Input Jam Lembur</CardTitle>
@@ -411,6 +462,7 @@ export default function OvertimeCalendar() {
             </CardContent>
           </Card>
 
+          {/* Summary */}
           <Card>
             <CardHeader>
               <CardTitle>Ringkasan Lembur</CardTitle>
@@ -430,13 +482,58 @@ export default function OvertimeCalendar() {
                   <span className="font-bold">Rp {(5000 + ((workExperience - 1) * 10000) > 0 ? 5000 + ((workExperience - 1) * 10000) : 0).toLocaleString('id-ID')}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span>Periode:</span>
+                  <span className="font-bold">
+                    1 - {getDaysInMonth(currentDate)} {months[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </span>
+                </div>
+                <div className="flex justify-between text-lg font-bold bg-green-100 p-2 rounded">
                   <span>Total Upah Lembur:</span>
-                  <span className="font-bold">Rp {getTotalOvertimePay().toLocaleString('id-ID')}</span>
+                  <span>Rp {getTotalOvertimePay().toLocaleString('id-ID')}</span>
                 </div>
               </div>
-              <Button onClick={clearAllData} variant="destructive" className="w-full">
-                Hapus Semua Data
-              </Button>
+              
+              <div className="mt-6 space-y-2">
+                <h4 className="font-semibold">Keterangan Warna:</h4>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-200 border"></div>
+                  <span className="text-sm">Hari Normal</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-yellow-400 border"></div>
+                  <span className="text-sm">Hari Kerja Lembur</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-500 border"></div>
+                  <span className="text-sm">Hari Libur Lembur</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-pink-300 border"></div>
+                  <span className="text-sm">Libur Nasional</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border border-purple-500 relative">
+                    <div className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                  </div>
+                  <span className="text-sm">Hari Ini</span>
+                </div>
+              </div>
+
+              <div className="mt-6 text-xs text-gray-600">
+                <h4 className="font-semibold mb-2">Perhitungan sesuai UU Ketenagakerjaan:</h4>
+                <ul className="space-y-1">
+                  <li>• Hari kerja: Jam 1 = 1.5x, Jam 2+ = 2x</li>
+                  <li>• Hari libur: Jam 1-7 = 2x, Jam 8 = 3x, Jam 9-10 = 4x</li>
+                  <li>• Upah per jam = (UMK + Tunjangan) ÷ 173</li>
+                  <li>• Tunjangan masa kerja: Rp5.000/tahun pertama + Rp10.000/tahun berikutnya</li>
+                </ul>
+              </div>
+              
+              <div className="mt-4 space-y-2">
+                <Button onClick={clearAllData} variant="outline" size="sm" className="w-full text-red-600">
+                  Hapus Semua Data
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
