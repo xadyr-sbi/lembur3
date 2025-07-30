@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import Image from 'next/image'; // Tambahkan import Image
 
 interface OvertimeDay {
   date: number
@@ -330,16 +331,27 @@ export default function OvertimeCalendar() {
       <div className="max-w-6xl mx-auto">
         <Card className="mb-6">
           <CardHeader className="bg-gray-100">
-            <div className="text-left">
+            <div className="text-center"> {/* Ubah menjadi text-center untuk pusatkan logo */}
               <CardTitle className="text-2xl font-bold text-gray-800">
                 KALENDER HITUNG UPAH LEMBUR
               </CardTitle>
               <p className="text-lg font-semibold text-gray-700 mt-1">
                 SBTP - FSBI
               </p>
+              
+              {/* Logo ditambahkan di sini */}
+              <div className="flex justify-center my-4">
+                <Image 
+                  src="/logo.png" 
+                  alt="SBTP-FSBI Logo" 
+                  width={150} 
+                  height={50}
+                  className="object-contain"
+                />
+              </div>
             </div>
             <div className="flex items-center justify-between mt-4">
-            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
                   <Label htmlFor="salary" className="font-medium">UMSK GWI MADIUN:</Label>
                   <div className="flex items-center gap-2">
