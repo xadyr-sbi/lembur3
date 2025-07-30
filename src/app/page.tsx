@@ -344,8 +344,8 @@ export default function OvertimeCalendar() {
                 <Image 
                   src="/logo.png" 
                   alt="SBTP-FSBI Logo" 
-                  width={150} 
-                  height={50}
+                  width={300} 
+                  height={100}
                   className="object-contain"
                 />
               </div>
