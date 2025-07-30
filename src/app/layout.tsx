@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Script from "next/script"
-import Image from "next/image"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -27,12 +26,6 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        {/* Header dengan logo di pojok kanan atas */}
-        <header className="flex justify-end p-4">
-          <Image src="/logo.png" alt="Logo" width={50} height={50} />
-        </header>
-
-        {/* Konten utama */}
         {children}
       </body>
     </html>
