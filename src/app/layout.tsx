@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import Script from "next/script" // ⬅️ Tambahkan ini
+import Script from "next/script"
+import Image from "next/image"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -18,14 +19,22 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
-        {/* ⬇️ Tambahkan script Umami di sini */}
+        {/* Script Umami */}
         <Script
           defer
           src="https://cloud.umami.is/script.js"
           data-website-id="63a95e6e-fee4-477c-a397-bca481320684"
         />
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {/* Header dengan logo di pojok kanan atas */}
+        <header className="flex justify-end p-4">
+          <Image src="/logo.png" alt="Logo" width={50} height={50} />
+        </header>
+
+        {/* Konten utama */}
+        {children}
+      </body>
     </html>
   )
 }
