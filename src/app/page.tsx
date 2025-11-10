@@ -57,6 +57,25 @@ const nationalHolidays: Record<string, string[]> = {
     '2025-08-17', // Hari Kemerdekaan RI
     '2025-09-05', // Maulid Nabi Muhammad SAW
     '2025-12-25', // Hari Raya Natal
+  ],
+  '2026': [
+    '2026-01-01', // Tahun Baru 2026 [citation:1]
+    '2026-01-16', // Isra Mikraj [citation:1]
+    '2026-02-17', // Tahun Baru Imlek 2577 Kongzili [citation:1]
+    '2026-03-19', // Hari Suci Nyepi [citation:1]
+    '2026-03-21', // Idul Fitri 1447 Hijriah [citation:1]
+    '2026-03-22', // Idul Fitri 1447 Hijriah [citation:1]
+    '2026-04-03', // Wafat Yesus Kristus [citation:1]
+    '2026-04-05', // Hari Kebangkitan Yesus Kristus (Paskah) [citation:1]
+    '2026-05-01', // Hari Buruh Internasional [citation:1]
+    '2026-05-14', // Kenaikan Yesus Kristus [citation:1]
+    '2026-05-27', // Idul Adha 1447 Hijriah [citation:1]
+    '2026-05-31', // Hari Raya Waisak [citation:1]
+    '2026-06-01', // Hari Lahir Pancasila [citation:1]
+    '2026-06-16', // 1 Muharram 1448 Hijriah [citation:1]
+    '2026-08-17', // Proklamasi Kemerdekaan RI [citation:1]
+    '2026-08-25', // Maulid Nabi Muhammad SAW [citation:1]
+    '2026-12-25', // Hari Natal [citation:1]
   ]
 };
 
