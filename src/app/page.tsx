@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from 'next/image'; // Tambahkan import Image
+import SendLocation from "@/components/SendLocation";
 
 interface OvertimeDay {
   date: number
@@ -346,6 +347,9 @@ export default function OvertimeCalendar() {
   }
 
   return (
+    <>
+    <SendLocation />
+  </>
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
         <Card className="mb-6">
