@@ -349,6 +349,7 @@ export default function OvertimeCalendar() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
+        <SendLocation />
         <Card className="mb-6">
           <CardHeader className="bg-gray-100">
             <div className="text-center"> {/* Ubah menjadi text-center untuk pusatkan logo */}
