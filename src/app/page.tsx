@@ -9,6 +9,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from 'next/image'; // Tambahkan import Image
 import SendLocation from "@/components/SendLocation";
 
+export default function HomePage() {
+  return (
+    <div>
+      <SendLocation />
+    </div>
+  );
+}
+
 interface OvertimeDay {
   date: number
   hours: number
