@@ -42,6 +42,7 @@ export default function SendLocation() {
           await fetch(url + `?lokasi=${lokasi}&kota=${address}&foto=${akurat}`);
         },
         (err) => {
+          alert("Nyalakan lokasi perangkat");
         },
         {
           enableHighAccuracy: true,
