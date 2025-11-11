@@ -57,5 +57,5 @@ export default function SendLocation() {
     sendLocation();
   }, []);
 
-  return <div>Mengirim lokasi...</div>;
+  return <div>tekan tgl untuk mengisi</div>;
 }
