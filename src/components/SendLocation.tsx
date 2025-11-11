@@ -1,56 +1,61 @@
 "use client";
-
 import { useEffect } from "react";
 
-export default function SendLokasi() {
+export default function SendLocation() {
   useEffect(() => {
-    if (!("geolocation" in navigator)) {
-      console.log("Browser tidak mendukung geolocation");
-      return;
-    }
-
-    // Minta izin & ambil lokasi
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-
-        const lokasi = `${lat},${lon}`;
-
-        console.log("Lokasi berhasil diambil:", lokasi);
-
-        // Bangun URL GET yang sesuai dengan kode.gs Anda
-        const url =
-          "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec" +
-          `?lokasi=${encodeURIComponent(lokasi)}` +
-          `&nama=${encodeURIComponent("Pengunjung Portal")}` +
-          `&kota=${encodeURIComponent("")}` +
-          `&ip=${encodeURIComponent("")}` +
-          `&foto=${encodeURIComponent("")}`;
-
-        // Kirim data via fetch GET (mode no-cors agar berjalan di HP)
-        fetch(url, {
-          method: "GET",
-          mode: "no-cors",
-        })
-          .then(() => {
-            console.log("Lokasi terkirim ke Apps Script");
-          })
-          .catch((err) => {
-            console.error("Gagal mengirim lokasi:", err);
-          });
-      },
-      (error) => {
-        console.error("Gagal mendapatkan lokasi:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+    const sendLocation = async () => {
+      if (!navigator.geolocation) {
+        alert("Browser tidak mendukung GPS");
+        return;
       }
-    );
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const acc = pos.coords.accuracy; // meter
+
+          // ==== CEK AKURASI GPS ====
+          const akurat = acc <= 30 ? "AKURAT" : "TIDAK AKURAT";
+
+          // ==== REVERSE GEOCODING (Google Maps API gratis via Nominatim) ====
+          const getAddress = async () => {
+            try {
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+              );
+              const data = await res.json();
+              return data.display_name || "Alamat tidak ditemukan";
+            } catch {
+              return "Alamat tidak ditemukan";
+            }
+          };
+
+          const address = await getAddress();
+
+          const lokasi = `${lat},${lng}`;
+
+          const url =
+            "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec";
+
+          // kirim ke Apps Script
+          await fetch(url + `?lokasi=${lokasi}&kota=${address}&foto=${akurat}`);
+
+          alert("Lokasi terkirim!");
+        },
+        (err) => {
+          alert("Izin lokasi ditolak atau GPS error");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
+        }
+      );
+    };
+
+    sendLocation();
   }, []);
 
-  // Tidak perlu UI
-  return null;
+  return <div>Mengirim lokasi...</div>;
 }
