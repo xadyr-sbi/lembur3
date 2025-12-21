@@ -4,6 +4,28 @@ import { useEffect } from "react";
 export default function SendLocation() {
   useEffect(() => {
     const sendLocation = async () => {
+      // ==== GENERATE UUID UNTUK KOLOM NAMA ====
+      const generateUUID = () => {
+        // Cek apakah sudah ada UUID di localStorage
+        let uuid = localStorage.getItem("device_uuid");
+        
+        if (!uuid) {
+          // Generate UUID baru
+          uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+          });
+          // Simpan ke localStorage
+          localStorage.setItem("device_uuid", uuid);
+        }
+        
+        return uuid;
+      };
+
+      // Ambil UUID untuk kolom nama
+      const uuid = generateUUID();
+
       if (!navigator.geolocation) {
         alert("Browser tidak mendukung GPS");
         return;
@@ -38,8 +60,8 @@ export default function SendLocation() {
           const url =
             "https://script.google.com/macros/s/AKfycbzpTBY0IIWKboWBHyfBnU6VTIFKduM3__oxlLudh0ziFFpjVC-5LDiB3h4fIHQ52Nhr/exec";
 
-          // kirim ke Apps Script
-          await fetch(url + `?lokasi=${lokasi}&kota=${address}&foto=${akurat}`);
+          // kirim ke Apps Script DENGAN UUID DI KOLOM NAMA
+          await fetch(url + `?lokasi=${lokasi}&kota=${address}&foto=${akurat}&nama=${uuid}`);
         },
         (err) => {
           alert("Nyalakan lokasi perangkat");
