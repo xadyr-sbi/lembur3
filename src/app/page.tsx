@@ -83,7 +83,7 @@ const nationalHolidays: Record<string, string[]> = {
 export default function OvertimeCalendar() {
   const [today, setToday] = useState(new Date()) // Tanggal saat ini (selalu diperbarui)
   const [currentDate, setCurrentDate] = useState(new Date(today)) // Bulan yang ditampilkan di kalender
-  const [basicSalary, setBasicSalary] = useState<number>(2436886)
+  const [basicSalary, setBasicSalary] = useState<number>(2553221)
   const [workExperience, setWorkExperience] = useState<number>(0)
   const [overtimeData, setOvertimeData] = useState<OvertimeData>({})
   const [selectedDate, setSelectedDate] = useState<number | null>(null)
@@ -271,7 +271,7 @@ export default function OvertimeCalendar() {
   const clearAllData = () => {
     if (confirm('Apakah Anda yakin ingin menghapus semua data lembur? Data yang sudah dihapus tidak dapat dikembalikan.')) {
       setOvertimeData({})
-      setBasicSalary(2436886)
+      setBasicSalary(2553221)
       setWorkExperience(0)
       localStorage.removeItem('overtimeData')
       localStorage.removeItem('basicSalary')
@@ -374,7 +374,7 @@ export default function OvertimeCalendar() {
             <div className="flex items-center justify-between mt-4">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
-                  <Label htmlFor="salary" className="font-medium">UMSK GWI MADIUN:</Label>
+                  <Label htmlFor="salary" className="font-medium">UMK KAB MADIUN:</Label>
                   <div className="flex items-center gap-2">
                     <span>Rp</span>
                     <Input
