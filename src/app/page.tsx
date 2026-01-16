@@ -169,12 +169,12 @@ export default function OvertimeCalendar() {
     
     if (isHoliday) {
       // Hari libur/minggu
-      if (hours <= 7) {
-        return hours * hourlyRate * 2 // 2x untuk 7 jam pertama
-      } else if (hours === 8) {
-        return (7 * hourlyRate * 2) + (1 * hourlyRate * 3) // jam ke-8: 3x
+      if (hours <= 8) {
+        return hours * hourlyRate * 2 // 2x untuk 8 jam pertama
+      } else if (hours === 9) {
+        return (8 * hourlyRate * 2) + (1 * hourlyRate * 3) // jam ke-9: 3x
       } else {
-        return (7 * hourlyRate * 2) + (1 * hourlyRate * 3) + ((hours - 8) * hourlyRate * 4) // jam ke-9,10: 4x
+        return (8 * hourlyRate * 2) + (1 * hourlyRate * 3) + ((hours - 9) * hourlyRate * 4) // jam ke-10,12: 4x
       }
     } else {
       // Hari kerja biasa
@@ -556,7 +556,7 @@ export default function OvertimeCalendar() {
                 <h4 className="font-semibold mb-2">Perhitungan sesuai UU Ketenagakerjaan:</h4>
                 <ul className="space-y-1">
                   <li>• Hari kerja: Jam 1 = 1.5x, Jam 2+ = 2x</li>
-                  <li>• Hari libur: Jam 1-7 = 2x, Jam 8 = 3x, Jam 9-10 = 4x</li>
+                  <li>• Hari libur: Jam 1-8 = 2x, Jam 9 = 3x, Jam 10-12 = 4x</li>
                   <li>• Upah per jam = (UMK + Tunjangan) ÷ 173</li>
                   <li>• Tunjangan masa kerja: Rp5.000/tahun pertama + Rp10.000/tahun berikutnya</li>
                 </ul>
