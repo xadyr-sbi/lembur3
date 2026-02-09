@@ -62,7 +62,7 @@ const nationalHolidays: Record<string, string[]> = {
   '2026': [
     '2026-01-01', // Tahun Baru 2026 [citation:1]
     '2026-01-16', // Isra Mikraj [citation:1]
-    '2026-02-17', // Tahun Baru Imlek 2577 Kongzili [citation:1]
+    '2026-02-16', // Tahun Baru Imlek 2577 Kongzili [citation:1]
     '2026-03-19', // Hari Suci Nyepi [citation:1]
     '2026-03-21', // Idul Fitri 1447 Hijriah [citation:1]
     '2026-03-22', // Idul Fitri 1447 Hijriah [citation:1]
