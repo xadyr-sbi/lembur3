@@ -80,10 +80,21 @@ const nationalHolidays: Record<string, string[]> = {
   ]
 };
 
+// Template for leave days (cuti) - yellow color
+const leaveDays: Record<string, string[]> = {
+  '2026': [
+    '2026-03-20', // Cuti tanggal 20 Maret 2026
+    '2026-03-23', // Cuti tanggal 23 Maret 2026
+    '2026-03-24', // Cuti tanggal 24 Maret 2026
+    '2026-03-25', // Cuti tanggal 25 Maret 2026
+  ]
+  // Anda bisa menambahkan cuti untuk tahun atau bulan lain di sini
+};
+
 export default function OvertimeCalendar() {
   const [today, setToday] = useState(new Date()) // Tanggal saat ini (selalu diperbarui)
   const [currentDate, setCurrentDate] = useState(new Date(today)) // Bulan yang ditampilkan di kalender
-  const [basicSalary, setBasicSalary] = useState<number>(2553221)
+  const [basicSalary, setBasicSalary] = useState<number>(2686460)
   const [workExperience, setWorkExperience] = useState<number>(0)
   const [overtimeData, setOvertimeData] = useState<OvertimeData>({})
   const [selectedDate, setSelectedDate] = useState<number | null>(null)
@@ -271,7 +282,7 @@ export default function OvertimeCalendar() {
   const clearAllData = () => {
     if (confirm('Apakah Anda yakin ingin menghapus semua data lembur? Data yang sudah dihapus tidak dapat dikembalikan.')) {
       setOvertimeData({})
-      setBasicSalary(2553221)
+      setBasicSalary(2686460)
       setWorkExperience(0)
       localStorage.removeItem('overtimeData')
       localStorage.removeItem('basicSalary')
@@ -305,6 +316,9 @@ export default function OvertimeCalendar() {
       const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
       const isNationalHoliday = nationalHolidays[year]?.includes(dateStr) ?? false;
       
+      // Check if it's a leave day
+      const isLeaveDay = leaveDays[year]?.includes(dateStr) ?? false;
+      
       const dayIndex = (firstDay + date - 1) % 7
       const isSunday = dayIndex === 0
       
@@ -314,12 +328,31 @@ export default function OvertimeCalendar() {
         month === today.getMonth() &&
         year === today.getFullYear();
       
+      // Determine background color based on priority:
+      // 1. Overtime data (if exists)
+      // 2. Leave day (yellow)
+      // 3. National holiday (pink)
+      // 4. Normal day (green)
+      let bgColorClass = 'bg-green-200'; // default normal day
+      let bgText = '';
+      
+      if (overtimeDay) {
+        bgColorClass = overtimeDay.isHoliday ? 'bg-red-500 text-white' : 'bg-yellow-400 text-black';
+        bgText = `${overtimeDay.hours}h`;
+      } else if (isLeaveDay) {
+        bgColorClass = 'bg-yellow-200'; // Warna kuning untuk hari cuti
+        bgText = 'Cuti';
+      } else if (isNationalHoliday) {
+        bgColorClass = 'bg-pink-300';
+        bgText = 'Libur';
+      }
+      
       days.push(
         <div
           key={date}
           onClick={() => handleDateClick(date)}
           className={`h-16 border border-gray-300 cursor-pointer flex items-center justify-center text-sm font-medium relative
-            ${overtimeDay ? (overtimeDay.isHoliday ? 'bg-red-500 text-white' : 'bg-yellow-400 text-black') : (isNationalHoliday ? 'bg-pink-300' : 'bg-green-200')}
+            ${bgColorClass}
             ${selectedDate === date ? 'ring-2 ring-blue-500' : ''}
             ${isToday ? 'ring-2 ring-purple-500 ring-offset-1' : ''}
             hover:bg-opacity-80 transition-colors
@@ -331,13 +364,10 @@ export default function OvertimeCalendar() {
           {isToday && (
             <div className="absolute top-1 right-1 w-2 h-2 rounded-full bg-purple-500"></div>
           )}
-          {overtimeDay && (
+          {bgText && (
             <div className="absolute bottom-1 right-1 text-xs">
-              {overtimeDay.hours}h
+              {bgText}
             </div>
-          )}
-          {isNationalHoliday && !overtimeDay && (
-            <div className="absolute bottom-1 right-1 text-xs">Libur</div>
           )}
         </div>
       )
@@ -374,7 +404,7 @@ export default function OvertimeCalendar() {
             <div className="flex items-center justify-between mt-4">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
-                  <Label htmlFor="salary" className="font-medium">UMK KAB MADIUN:</Label>
+                  <Label htmlFor="salary" className="font-medium">GAJI POKOK:</Label>
                   <div className="flex items-center gap-2">
                     <span>Rp</span>
                     <Input
@@ -531,6 +561,10 @@ export default function OvertimeCalendar() {
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-green-200 border"></div>
                   <span className="text-sm">Hari Normal</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-yellow-200 border"></div>
+                  <span className="text-sm">Hari Cuti</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 bg-yellow-400 border"></div>
